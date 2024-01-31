@@ -108,8 +108,23 @@ ggplot(mean_vh_long, aes(x = Transect_ID, y = Value, fill = Turf)) +
   scale_y_continuous(limit = c(0,40),expand = expansion(mult = 0, add = 0))
 ```
 
-#### Team Member #3 Workspace (rename)
+#### Team Member #3 Workspace - height along transects
 
 ```{r}
+trans_height <- vegheight |>
+  group_by(Transect_ID, Date) |>
+  mutate(Transect_Num = group_indices())
 
+heightplot <- trans_height |>
+  ggplot(aes(x = Distance_m)) +
+  geom_line(aes(y = Grass_Height_cm, color = "Grass"), linewidth = 1) +
+  geom_line(aes(y = Forb_Height_cm, color = "Forb"), linewidth = 1) +
+  geom_line(aes(y = Shrub_Height_cm, color = "shrub"), linewidth = 1) +
+  geom_line(aes(y = Tree_Height_cm, color = "Tree"), linewidth = 1) +
+  labs(title = "title here", x = "distance here", y = "plant height here") +
+  facet_grid(Transect_ID ~ Date) +
+  #facet_wrap(~ Transect_Num, scales = "free_y", labeller = labeller(Transect_Num = c("1" = "Transect 1", "2" = "10/04/18 2", "3" = "Transect 3", "4" = "Transect 4", "5" = "Transect 5", "6" = "Transect 6", "7" = "06/13/18 7", "8" = "Transect 8", "9" = "Transect 9", "10" = "06/13/18 10", "11" = "Transect 11", "12" = "Transect 12"))) +
+  scale_color_brewer(type = "div", palette = "Spectral", aesthetics = c("colour", "fill"))
+
+heightplot
 ```
