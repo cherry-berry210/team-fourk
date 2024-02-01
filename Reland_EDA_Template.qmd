@@ -68,6 +68,31 @@ mean_vh <- vegheight |>
             AvgForb_cm = mean(Forb_Height_cm),
             AvgShrub_cm = mean(Shrub_Height_cm),
             AvgTree_cm = mean(Tree_Height_cm))
+
+#Reshape the data into long format
+mean_vh_long <- pivot_longer(mean_vh, cols = c(AvgGrass_cm, AvgShrub_cm, AvgForb_cm, AvgTree_cm), names_to = "Vegetation_Type", values_to = "Value")
+
+```
+
+```{r}
+#Presence and absence
+ps_vh <- vegheight |>
+  select(Turf, Site_ID, Transect_ID, Forb_Height_cm, Grass_Height_cm, Shrub_Height_cm, Tree_Height_cm)|>
+  mutate(Forb_Height_cm = case_when(
+    Forb_Height_cm == 0 ~ 0,
+    TRUE ~ 1)) |>
+  mutate(Grass_Height_cm = case_when(
+    Grass_Height_cm == 0 ~ 0,
+    TRUE ~ 1)) |>
+  mutate(Shrub_Height_cm = case_when(
+    Shrub_Height_cm == 0 ~ 0,
+    TRUE ~ 1)) |>
+  mutate(Tree_Height_cm = case_when(
+    Tree_Height_cm == 0 ~ 0,
+    TRUE ~ 1))
+
+#Reshape the data into long format
+ps_vh_long <- pivot_longer(ps_vh, cols = c(Grass_Height_cm, Shrub_Height_cm, Forb_Height_cm, Tree_Height_cm), names_to = "Vegetation_Type", values_to = "Presence")
 ```
 
 #### Team Member #3 Analysis
@@ -87,25 +112,31 @@ ggplot(mean_cf, aes(x=Treatment, y=AvgCO2, fill= CycleType)) +
   scale_fill_manual(values=c("Green4", "Yellow2"))+
   theme_classic() + 
   scale_y_continuous(limit = c(0,500),expand = expansion(mult = 0, add = 0))
+
+
 ```
 
 #### Team Member #2 Workspace - Vegetation Height
 
 ```{r}
-
-# Reshape the data into long format
-mean_vh_long <- pivot_longer(mean_vh, cols = c(AvgGrass_cm, AvgShrub_cm, AvgForb_cm, AvgTree_cm), names_to = "Vegetation_Type", values_to = "Value")
-
-# Plot
+# Plot Turf vs No Turf
 ggplot(mean_vh_long, aes(x = Transect_ID, y = Value, fill = Turf)) + 
   geom_col(position = "dodge") +
   # Separate panels for each vegetation type
-  facet_wrap(~Vegetation_Type, scales = "free_y") +
+  #scales = "free_y" allows the y axis scale to be independant 
+  facet_wrap(~Vegetation_Type, scales = "free_y", labeller = labeller(Vegetation_Type = c("AvgForb_cm" = "Forb", "AvgGrass_cm" = "Grass", "AvgShrub_cm"= "Shrub", "AvgTree_cm" = "Tree"))) +
   labs(title="Average Vegetation In Turf vs No Turf",
-        x ="Transect ID", y = "Average Vegetation (cm)", fill = "Turf")+
+        x ="Transect ID", y = "Vegetation Height (cm)", fill = "Turf")+
   scale_fill_manual(values=c("Pink", "Purple"))+
-  theme_classic() + 
-  scale_y_continuous(limit = c(0,40),expand = expansion(mult = 0, add = 0))
+  theme_classic()
+
+```
+
+```{r}
+# Plot presence vs absence
+ggplot(ps_vh, aes(x = Turf, y = Forb_Height_cm, fill = Site_ID)) + 
+  geom_col(position = "dodge")
+
 ```
 
 #### Team Member #3 Workspace (rename)
