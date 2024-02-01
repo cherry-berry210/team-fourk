@@ -47,15 +47,21 @@ Once you have something good, show it to your teammates and you can agree to add
 #### Team Member #1 Analysis
 
 ```{r}
+#Remove first 30 seconds due to instrument error
+carbonflux<-subset(carbonflux, carbonflux$Time_sec > 30)
+
 #take the average CO2 for the 240 second readings for Dark and Light cycles and group by native/non native
 mean_cf <- carbonflux %>%
   group_by(Treatment,CycleType) %>%
   summarize(meannative = mean(CO2_ppm)) %>%
   rename(AvgCO2 = meannative)
 
-#two-way anova
-#cf_aov <-summary(aov(CO2_ppm ~ Treatment + CycleType, data = carbonflux))
-#cf_aov <-summary(aov(AvgCO2 ~ Treatment + CycleType, data = mean_cf))
+#Calculate the rate of change of CO2
+rateofchange <- carbonflux %>%
+  group_by(Date, Treatment, CycleType, Quad, Block) %>%
+  summarize(lm(CO2_ppm~Time_sec)$coefficients[2]) %>%
+  rename(RateOfChange = 'lm(CO2_ppm ~ Time_sec)$coefficients[2]')
+
 ```
 
 #### Team Member #2 Analysis
@@ -83,10 +89,18 @@ mean_vh <- vegheight |>
 ggplot(mean_cf, aes(x=Treatment, y=AvgCO2, fill= CycleType)) + 
   geom_bar(stat = "identity", position = "dodge") +
   labs(title="CO2 in Native vs. Nonnative Species with Dark vs. Light Conditions",
-        x ="Plant Communities", y = "Average CO2", fill = "Light Cycle")+
-  scale_fill_manual(values=c("Green4", "Yellow2"))+
+        x ="Plant Communities", y = "CO2 (ppm)", fill = "Light Cycle")+
+  scale_fill_manual(values=c("Yellow4", "Yellow2")) +
   theme_classic() + 
   scale_y_continuous(limit = c(0,500),expand = expansion(mult = 0, add = 0))
+
+#Boxplot of rate of change
+ggplot(rateofchange, aes(x= RateOfChange, y=CycleType, fill=Treatment)) + 
+  geom_boxplot(position = "dodge")+
+  labs(title="Rate of Change of Vegetation Types", x ="Rate of Change", y="Light Cycle Type") +
+  scale_fill_manual(values=c("Green3", "Yellow", "Red"))+
+  theme_classic()
+
 ```
 
 #### Team Member #2 Workspace - Vegetation Height
