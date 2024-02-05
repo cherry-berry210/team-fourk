@@ -156,6 +156,22 @@ Veg_Final <- All_veg_data |>
 Veg_Final
 ```
 
+Cherry, Testing for adding native/nonnative treatments
+
+```{r}
+treatment_veg <- Veg_Final |>
+  mutate(Treatment = case_when(
+    between(Distance_m, 0, 10) & Turf == 'No Turf' ~ 'nonnative',
+    between(Distance_m, 11, 20) & Turf == 'No Turf' ~ 'nonnative',
+    between(Distance_m, 23, 37) & Turf == 'No Turf' ~ 'nonnative',
+    between(Distance_m, 39, 57) & Turf == 'No Turf' ~ 'nonnative',
+    between(Distance_m, 0, 20) & Turf == 'Turf' ~ 'native',
+    between(Distance_m, 22, 44) & Turf == 'Turf' ~ 'native',
+    TRUE ~ 'Unknown'))
+
+treatment_veg
+```
+
 ### Save your cleaned and complete Primary data frame to .csv and .Rdata and save the file as VARIABLE_Primary.csv or similar.
 
 ```{r}
