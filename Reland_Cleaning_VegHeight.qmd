@@ -147,6 +147,10 @@ Veg_Final <- All_veg_data |>
   mutate(Site_ID = gsub("2", "Site 2", Site_ID))
 ```
 
+```{r}
+Veg_Final
+```
+
 ### Save your cleaned and complete Primary data frame to .csv and .Rdata and save the file as VARIABLE_Primary.csv or similar.
 
 ```{r}

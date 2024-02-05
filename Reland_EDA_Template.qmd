@@ -135,7 +135,15 @@ grass_plot <- trans_height |>
   labs(title = "title here", x = "distance here", y = "plant height here") +
   facet_grid(Transect_ID ~ Date)
 
+grass_hist <- trans_height |>
+  ggplot(aes(x = log(Grass_Height_cm + 1))) +
+  geom_histogram(binwidth = 0.5, fill = "red3", color = "white") +
+  labs(title = "title here", x = "grass height", y = "count") +
+  facet_grid(Transect_ID ~ Date)
+  #scale_x_log10()
+
 grass_plot
+grass_hist
 ```
 
 Forb Plot
@@ -145,6 +153,12 @@ forb_plot <- trans_height |>
   ggplot(aes(x = Distance_m)) +
   geom_line(aes(y = Forb_Height_cm), color = "red3", linewidth = 1) +
   labs(title = "title here", x = "distance here", y = "plant height here") +
+  facet_grid(Transect_ID ~ Date)
+
+grass_hist <- trans_height |>
+  ggplot(aes(x = Grass_Height_cm)) +
+  geom_histogram(binwidth = 1, fill = "red3", color = "white") +
+  labs(title = "title here", x = "grass height", y = "count") +
   facet_grid(Transect_ID ~ Date)
 
 forb_plot
@@ -159,6 +173,12 @@ shrub_plot <- trans_height |>
   labs(title = "title here", x = "distance here", y = "plant height here") +
   facet_grid(Transect_ID ~ Date)
 
+grass_hist <- trans_height |>
+  ggplot(aes(x = Grass_Height_cm)) +
+  geom_histogram(binwidth = 1, fill = "red3", color = "white") +
+  labs(title = "title here", x = "grass height", y = "count") +
+  facet_grid(Transect_ID ~ Date)
+
 shrub_plot
 ```
 
@@ -171,5 +191,28 @@ tree_plot <- trans_height |>
   labs(title = "title here", x = "distance here", y = "plant height here") +
   facet_grid(Transect_ID ~ Date)
 
+grass_hist <- trans_height |>
+  ggplot(aes(x = Grass_Height_cm)) +
+  geom_histogram(binwidth = 1, fill = "red3", color = "white") +
+  labs(title = "title here", x = "grass height", y = "count") +
+  facet_grid(Transect_ID ~ Date)
+
 tree_plot
+```
+
+combined cover plot
+
+```{r}
+combo_plot <- trans_height |>
+  ggplot(aes(x = Distance_m)) +
+  geom_line(aes(y = Grass_Height_cm, color = "Grass"), linewidth = 1) +
+  geom_line(aes(y = Forb_Height_cm, color = "Forb"), linewidth = 1) +
+  geom_line(aes(y = Shrub_Height_cm, color = "Shrub"), linewidth = 1) +
+  geom_line(aes(y = Tree_Height_cm, color = "Tree"), linewidth = 1) +
+  labs(title = "title here", x = "distance here", y = "plant height here") +
+  facet_grid(Transect_ID ~ Date) +
+  scale_y_log10() +
+  scale_color_brewer(type = "div", palette = "Spectral", aesthetics = c("colour", "fill"))
+
+combo_plot
 ```
