@@ -167,7 +167,8 @@ treatment_veg <- Veg_Final |>
     between(Distance_m, 39, 57) & Turf == 'No Turf' ~ 'nonnative',
     between(Distance_m, 0, 20) & Turf == 'Turf' ~ 'native',
     between(Distance_m, 22, 44) & Turf == 'Turf' ~ 'native',
-    TRUE ~ 'Unknown'))
+    TRUE ~ 'unknown')) |>
+  filter(Treatment != 'unknown')
 
 treatment_veg
 ```
