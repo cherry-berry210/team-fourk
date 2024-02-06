@@ -50,17 +50,33 @@ Once you have something good, show it to your teammates and you can agree to add
 #Remove first 30 seconds due to instrument error
 carbonflux<-subset(carbonflux, carbonflux$Time_sec > 30)
 
-#take the average CO2 for the 240 second readings for Dark and Light cycles and group by native/non native
-mean_cf <- carbonflux %>%
-  group_by(Treatment,CycleType) %>%
-  summarize(meannative = mean(CO2_ppm)) %>%
-  rename(AvgCO2 = meannative)
-
-#Calculate the rate of change of CO2
+#Calculate the rate of change
 rateofchange <- carbonflux %>%
-  group_by(Date, Treatment, CycleType, Quad, Block) %>%
+  group_by(Date, Quad, Block, CycleType, Treatment) %>%
   summarize(lm(CO2_ppm~Time_sec)$coefficients[2]) %>%
-  rename(RateOfChange = 'lm(CO2_ppm ~ Time_sec)$coefficients[2]')
+  rename(RateOfChange = 'lm(CO2_ppm ~ Time_sec)$coefficients[2]') %>%
+  filter(Treatment == "Native" | Treatment == "NonNative")
+
+#Calculate the rate of change of CO2 Light Condition (Photo. and Respiration)
+rateofchange_light <- carbonflux %>%
+  group_by(Date, Quad, Block, CycleType, Treatment) %>%
+  summarize(lm(CO2_ppm~Time_sec)$coefficients[2]) %>%
+  rename(RateOfChange = 'lm(CO2_ppm ~ Time_sec)$coefficients[2]') %>%
+  filter(Treatment == "Native" | Treatment == "NonNative") %>%
+  filter(CycleType == "Light")
+
+#Calculate the rate of change of CO2 Dark Condition (Respiration)
+rateofchange_dark <- carbonflux %>%
+  group_by(Date, Quad, Block, CycleType, Treatment) %>%
+  summarize(lm(CO2_ppm~Time_sec)$coefficients[2]) %>%
+  rename(RateOfChange = 'lm(CO2_ppm ~ Time_sec)$coefficients[2]') %>%
+  filter(Treatment == "Native" | Treatment == "NonNative") %>%
+  filter(CycleType == "Dark")
+
+#Calculate photosynthetic rates (Light-Dark)
+photo <- rateofchange %>%
+  group_by(Date, Quad, Block, Treatment) %>%
+  summarize(RateDifference = diff(RateOfChange))
 
 ```
 
@@ -109,13 +125,32 @@ ps_vh_long <- pivot_longer(ps_vh, cols = c(Grass_Height_cm, Shrub_Height_cm, For
 #### Team Member #1 Workspace - Carbon Flux
 
 ```{r}
+#Boxplot of rate of change in photosynthesis and respiration
+light<-ggplot(rateofchange_light, aes(x= RateOfChange, y=Treatment, fill=Treatment)) + 
+  geom_boxplot(position = "dodge")+
+  labs(title="Carbon Flux Rates During Photosynthetis and Respiration", x ="Rate of Change", y="Treatment") +
+  scale_fill_manual(values=c("Green3", "Red"))+
+  theme_classic()
+
+
+#Boxplot of rate of change in respiration
+dark<-ggplot(rateofchange_dark, aes(x= RateOfChange, y=Treatment, fill=Treatment)) + 
+  geom_boxplot(position = "dodge")+
+  labs(title="Carbon Flux Rates During Respiration", x ="Rate of Change", y="Treatment") +
+  scale_fill_manual(values=c("Green3", "Red"))+
+  theme_classic()
+
+#Boxplot of rate of change in photosysnthesis
+lightdark<-ggplot(photo, aes(x= RateDifference, y=Treatment, fill=Treatment)) + 
 
 #Boxplot of rate of change
 ggplot(rateofchange, aes(x= RateOfChange, y=CycleType, fill=Treatment)) + 
+
   geom_boxplot(position = "dodge")+
-  labs(title="Rate of Change of Vegetation Types", x ="Rate of Change", y="Light Cycle Type") +
-  scale_fill_manual(values=c("Green3", "Yellow", "Red"))+
+  labs(title="Photosynthetic Carbon Flux During Photosynthesis", x ="Rate of Change", y="Treatment") +
+  scale_fill_manual(values=c("Green3", "Red"))+
   theme_classic()
+
 
 ```
 
