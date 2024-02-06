@@ -90,6 +90,31 @@ mean_vh <- vegheight |>
             AvgForb_cm = mean(Forb_Height_cm),
             AvgShrub_cm = mean(Shrub_Height_cm),
             AvgTree_cm = mean(Tree_Height_cm))
+
+#Reshape the data into long format
+mean_vh_long <- pivot_longer(mean_vh, cols = c(AvgGrass_cm, AvgShrub_cm, AvgForb_cm, AvgTree_cm), names_to = "Vegetation_Type", values_to = "Value")
+
+```
+
+```{r}
+#Presence and absence
+ps_vh <- vegheight |>
+  select(Turf, Site_ID, Transect_ID, Forb_Height_cm, Grass_Height_cm, Shrub_Height_cm, Tree_Height_cm)|>
+  mutate(Forb_Height_cm = case_when(
+    Forb_Height_cm == 0 ~ 0,
+    TRUE ~ 1)) |>
+  mutate(Grass_Height_cm = case_when(
+    Grass_Height_cm == 0 ~ 0,
+    TRUE ~ 1)) |>
+  mutate(Shrub_Height_cm = case_when(
+    Shrub_Height_cm == 0 ~ 0,
+    TRUE ~ 1)) |>
+  mutate(Tree_Height_cm = case_when(
+    Tree_Height_cm == 0 ~ 0,
+    TRUE ~ 1))
+
+#Reshape the data into long format
+ps_vh_long <- pivot_longer(ps_vh, cols = c(Grass_Height_cm, Shrub_Height_cm, Forb_Height_cm, Tree_Height_cm), names_to = "Vegetation_Type", values_to = "Presence")
 ```
 
 #### Team Member #3 Analysis
@@ -107,6 +132,7 @@ light<-ggplot(rateofchange_light, aes(x= RateOfChange, y=Treatment, fill=Treatme
   scale_fill_manual(values=c("Green3", "Red"))+
   theme_classic()
 
+
 #Boxplot of rate of change in respiration
 dark<-ggplot(rateofchange_dark, aes(x= RateOfChange, y=Treatment, fill=Treatment)) + 
   geom_boxplot(position = "dodge")+
@@ -116,6 +142,10 @@ dark<-ggplot(rateofchange_dark, aes(x= RateOfChange, y=Treatment, fill=Treatment
 
 #Boxplot of rate of change in photosysnthesis
 lightdark<-ggplot(photo, aes(x= RateDifference, y=Treatment, fill=Treatment)) + 
+
+#Boxplot of rate of change
+ggplot(rateofchange, aes(x= RateOfChange, y=CycleType, fill=Treatment)) + 
+
   geom_boxplot(position = "dodge")+
   labs(title="Photosynthetic Carbon Flux During Photosynthesis", x ="Rate of Change", y="Treatment") +
   scale_fill_manual(values=c("Green3", "Red"))+
@@ -127,39 +157,121 @@ lightdark<-ggplot(photo, aes(x= RateDifference, y=Treatment, fill=Treatment)) +
 #### Team Member #2 Workspace - Vegetation Height
 
 ```{r}
-
-# Reshape the data into long format
-mean_vh_long <- pivot_longer(mean_vh, cols = c(AvgGrass_cm, AvgShrub_cm, AvgForb_cm, AvgTree_cm), names_to = "Vegetation_Type", values_to = "Value")
-
-# Plot
+# Plot Turf vs No Turf
 ggplot(mean_vh_long, aes(x = Transect_ID, y = Value, fill = Turf)) + 
   geom_col(position = "dodge") +
   # Separate panels for each vegetation type
-  facet_wrap(~Vegetation_Type, scales = "free_y") +
+  #scales = "free_y" allows the y axis scale to be independant 
+  facet_wrap(~Vegetation_Type, scales = "free_y", labeller = labeller(Vegetation_Type = c("AvgForb_cm" = "Forb", "AvgGrass_cm" = "Grass", "AvgShrub_cm"= "Shrub", "AvgTree_cm" = "Tree"))) +
   labs(title="Average Vegetation In Turf vs No Turf",
-        x ="Transect ID", y = "Average Vegetation (cm)", fill = "Turf")+
+        x ="Transect ID", y = "Vegetation Height (cm)", fill = "Turf")+
   scale_fill_manual(values=c("Pink", "Purple"))+
-  theme_classic() + 
-  scale_y_continuous(limit = c(0,40),expand = expansion(mult = 0, add = 0))
+  theme_classic()
+
+```
+
+```{r}
+# Plot presence vs absence
+ggplot(ps_vh, aes(x = Turf, y = Forb_Height_cm, fill = Site_ID)) + 
+  geom_col(position = "dodge")
+
 ```
 
 #### Team Member #3 Workspace - height along transects
 
 ```{r}
-trans_height <- vegheight |>
-  group_by(Transect_ID, Date) |>
-  mutate(Transect_Num = group_indices())
+trans_height <- treatment_veg
+trans_height$Treatment <- factor(trans_height$Treatment, levels =  c('native', 'nonnative'))
+  #group_by(Treatment, Date) |>
+  #mutate(Treatment = group_indices())
 
-heightplot <- trans_height |>
+grass_plot <- trans_height |>
+  ggplot(aes(x = Distance_m)) +
+  geom_line(aes(y = Grass_Height_cm), color = "red3", linewidth = 1) +
+  labs(title = "title here", x = "distance here", y = "plant height here") +
+  facet_grid(Treatment ~ Date)
+
+grass_hist <- trans_height |>
+  ggplot(aes(x = log(Grass_Height_cm + 1))) +
+  geom_histogram(binwidth = 0.5, fill = "red3", color = "white") +
+  labs(title = "title here", x = "grass height", y = "count") +
+  facet_grid(Treatment ~ Date)
+  #scale_x_log10()
+
+grass_plot
+grass_hist
+```
+
+Forb Plot
+
+```{r}
+forb_plot <- trans_height |>
+  ggplot(aes(x = Distance_m)) +
+  geom_line(aes(y = Forb_Height_cm), color = "red3", linewidth = 1) +
+  labs(title = "title here", x = "distance here", y = "plant height here") +
+  facet_grid(Treatment ~ Date)
+
+forb_hist <- trans_height |>
+  ggplot(aes(x = Forb_Height_cm)) +
+  geom_histogram(binwidth = 1, fill = "red3", color = "white") +
+  labs(title = "title here", x = "forb height", y = "count") +
+  facet_grid(Treatment ~ Date)
+
+forb_plot
+forb_hist
+```
+
+Shrub Plot
+
+```{r}
+shrub_plot <- trans_height |>
+  ggplot(aes(x = Distance_m)) +
+  geom_line(aes(y = Shrub_Height_cm), color = "red3", linewidth = 1) +
+  labs(title = "title here", x = "distance here", y = "plant height here") +
+  facet_grid(Treatment ~ Date)
+
+shrub_hist <- trans_height |>
+  ggplot(aes(x = Shrub_Height_cm)) +
+  geom_histogram(binwidth = 1, fill = "red3", color = "white") +
+  labs(title = "title here", x = "shrub height", y = "count") +
+  facet_grid(Treatment ~ Date)
+
+shrub_plot
+shrub_hist
+```
+
+Tree Plot
+
+```{r}
+tree_plot <- trans_height |>
+  ggplot(aes(x = Distance_m)) +
+  geom_line(aes(y = Tree_Height_cm), color = "red3", linewidth = 1) +
+  labs(title = "title here", x = "distance here", y = "plant height here") +
+  facet_grid(Treatment ~ Date)
+
+tree_hist <- trans_height |>
+  ggplot(aes(x = Tree_Height_cm)) +
+  geom_histogram(binwidth = 1, fill = "red3", color = "white") +
+  labs(title = "title here", x = "tree height", y = "count") +
+  facet_grid(Treatment ~ Date)
+
+tree_plot
+tree_hist
+```
+
+combined cover plot
+
+```{r}
+combo_plot <- trans_height |>
   ggplot(aes(x = Distance_m)) +
   geom_line(aes(y = Grass_Height_cm, color = "Grass"), linewidth = 1) +
   geom_line(aes(y = Forb_Height_cm, color = "Forb"), linewidth = 1) +
-  geom_line(aes(y = Shrub_Height_cm, color = "shrub"), linewidth = 1) +
+  geom_line(aes(y = Shrub_Height_cm, color = "Shrub"), linewidth = 1) +
   geom_line(aes(y = Tree_Height_cm, color = "Tree"), linewidth = 1) +
   labs(title = "title here", x = "distance here", y = "plant height here") +
-  facet_grid(Transect_ID ~ Date) +
-  #facet_wrap(~ Transect_Num, scales = "free_y", labeller = labeller(Transect_Num = c("1" = "Transect 1", "2" = "10/04/18 2", "3" = "Transect 3", "4" = "Transect 4", "5" = "Transect 5", "6" = "Transect 6", "7" = "06/13/18 7", "8" = "Transect 8", "9" = "Transect 9", "10" = "06/13/18 10", "11" = "Transect 11", "12" = "Transect 12"))) +
+  facet_grid(Treatment ~ Date) +
+  #scale_y_log10() +
   scale_color_brewer(type = "div", palette = "Spectral", aesthetics = c("colour", "fill"))
 
-heightplot
+combo_plot
 ```
